@@ -138,8 +138,8 @@ public class Vault extends Device {
 
         this.storedAmount = 0;
         this.stored = stack.clone();
-        this.storedString = TUItems.createStackString(stored);
         this.stored.setAmount(1);
+        this.storedString = TUItems.createStackString(stored);
         this.addSpecificInput(this.stored);
     }
 

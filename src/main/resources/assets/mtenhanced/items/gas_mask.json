@@ -1,0 +1,59 @@
+{
+	"model": {
+		"type": "composite",
+		"models": [
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/0"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/1"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/2"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/3"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/4"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/5"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/6"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/7"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/8"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/9"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/10"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/11"
+			},
+			{
+				"type": "model",
+				"model": "mtenhanced:item/gas_mask/12"
+			}
+		]
+	}
+}

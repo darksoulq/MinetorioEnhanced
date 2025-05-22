@@ -1,6 +1,8 @@
 package me.darksoul.minetorioEnhanced.device;
 
+import com.MT.triggersUtility.TUItems;
 import com.MT.xxxtrigger50xxx.Devices.Device;
+import com.MT.xxxtrigger50xxx.Devices.MoverIOCenter;
 import com.MT.xxxtrigger50xxx.Guide.ItemMenu;
 import com.MT.xxxtrigger50xxx.MineItems;
 import com.MT.xxxtrigger50xxx.MineMain;
@@ -20,68 +22,74 @@ import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Vault extends Device {
-    public static int MAX = 1024;
-    public ItemStack stored;
+
+    public static final int MAX = 1024;
+    private static final String CLASS_SPACED_NAME = "Vault";
+
+    public transient ItemStack stored;
+    public String storedString;
     public int storedAmount = 0;
-    private static String classSpacedName = "Vault";
 
     public Vault(Location location) {
         super(location);
-        this.deviceName = "Vault";
+        this.deviceName = CLASS_SPACED_NAME;
         this.setMaterial("BARREL");
         this.setUseUI(true);
-        this.setOpenable(false);
+        this.setActionTimer(1);
         this.useSpecificInputs = true;
         this.addSpecificInput(new ItemStack(Material.AIR));
         this.setInputSlots(new ArrayList<>(List.of(0)));
-        this.setOutputSlots(new ArrayList<>(List.of(1)));
+        this.setOutputSlots(new ArrayList<>(List.of(1, 2)));
         this.standardMoverBehavior = true;
         this.displayLockedHorizontal = true;
     }
 
     @Override
     public ArrayList<String> stackDescription() {
-        ArrayList<String> var1 = new ArrayList<>();
-        var1.add("- Stores A lot of a single item in itself");
-        var1.add("- Items can only be taken out by movers");
-        var1.add(ChatColor.WHITE + " " + MinetorioEnhanced.GLYPHS.mouse_left.unicode() + " " + MineItems.grayBold() + "with Wire Tool to check amount of stored Items");
-        var1.add(ChatColor.WHITE + " " + MinetorioEnhanced.GLYPHS.mouse_right.unicode() + " " + MineItems.grayBold() + "Set the item to store");
-        return var1;
+        ArrayList<String> desc = new ArrayList<>();
+        desc.add("- Stores a lot of a single item in itself");
+        desc.add("- Items can only be taken out by movers");
+        desc.add(ChatColor.WHITE + " " + MinetorioEnhanced.GLYPHS.mouse_left.unicode() + " " +
+                MineItems.grayBold() + "with Wire Tool to check amount of stored items");
+        desc.add(ChatColor.WHITE + " " + MinetorioEnhanced.GLYPHS.mouse_right.unicode() + " " +
+                MineItems.grayBold() + "Set the item to store");
+        return desc;
     }
 
     @Override
     public boolean onRightClick(PlayerInteractEvent event) {
-        if (event.getItem() == null || event.getClickedBlock() == null) return false;
-        if (!event.getItem().getType().isAir()) {
-            if (storedAmount > 0 && stored != null) {
-                dropItems(event.getClickedBlock().getLocation());
-            }
-            set(event.getItem());
-            return false;
+        if (event.getPlayer().isSneaking()) return true;
+        ItemStack hand = event.getItem();
+        if (hand == null || hand.getType().isAir() || event.getClickedBlock() == null) return false;
+
+        if (storedAmount > 0 && stored != null) {
+            dropItems(event.getPlayer().getLocation());
         }
+
+        set(hand);
         return false;
     }
 
     @Override
     public boolean onLeftClick(PlayerInteractEvent event) {
-        if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
-            if (stored == null) {
-                event.getPlayer().sendMessage(MiniMessage.miniMessage()
-                        .deserialize("<red>No item has been set for this vault, shift-right click with an item to set one</red>"));
-            } else {
-                event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize("<green>Contains <gold>"
-                        + storedAmount
-                        + "/" + Vault.MAX
-                        + "</gold> Items</green>")
-                );
-            }
-            return false;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) return false;
+
+        if (stored == null) {
+            event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize(
+                    "<red>No item has been set for this vault, shift-right click with an item to set one</red>"
+            ));
+        } else {
+            event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize(
+                    "<green>Contains <gold>" + storedAmount + "/" + MAX + "</gold> Items</green>"
+            ));
         }
-        return false;
+
+        event.setCancelled(true);
+
+        return true;
     }
 
     @Override
@@ -93,53 +101,61 @@ public class Vault extends Device {
 
     @Override
     public void updateUI() {
+    }
+
+    @Override
+    public void action() {
         ItemStack input = inv.getItem(0);
         ItemStack output = inv.getItem(1);
-        if (input != null) {
-            for (int i = 0; i < input.getAmount(); i++) {
-                if (freeSpace() > 0) {
-                    add();
-                }
+
+        if (input != null && !input.getType().isAir()) {
+            for (int i = 0; i <= input.getAmount(); i++) {
+                if (freeSpace() > 0) add();
             }
-            inv.setItem(0, new ItemStack(Material.AIR));
+            inv.setItem(0, null);
         }
-        if (storedAmount == 0 && output != null && !output.isEmpty()) {
-            inv.setItem(1, new ItemStack(Material.AIR));
+
+        if (storedAmount == 0 && output != null && !output.getType().isAir()) {
+            inv.setItem(1, null);
         }
-        if (output != null && output.isEmpty() && storedAmount > 0) {
-            inv.setItem(1, stored.clone());
-            storedAmount--;
-        } else if (inv.getItem(1) == null && storedAmount > 0) {
+
+        if ((output == null || output.getType().isAir()) && storedAmount > 0) {
             inv.setItem(1, stored.clone());
             storedAmount--;
         }
     }
-    @Override
-    public void action() {}
 
-    public void visualUpdate(boolean var1) {
+    public void visualUpdate(boolean refresh) {
         Material icon = stored == null ? Material.AIR : stored.getType();
-        this.visualIconUpdate(var1, icon, 1.0F);
+        this.visualIconUpdate(refresh, icon, 1.0F);
     }
 
     public void set(ItemStack stack) {
+        if (stack.isSimilar(stored)) return;
         if (stored != null) {
             this.removeSpecificInput(stored);
         }
+
         this.storedAmount = 0;
-        stored = stack.clone();
-        stored.setAmount(1);
-        this.addSpecificInput(stored);
+        this.stored = stack.clone();
+        this.storedString = TUItems.createStackString(stored);
+        this.stored.setAmount(1);
+        this.addSpecificInput(this.stored);
     }
+
     public void add() {
-        if (stored == null) return;
-        storedAmount++;
+        if (stored != null && storedAmount < MAX) {
+            storedAmount++;
+        }
     }
+
     public int freeSpace() {
         return MAX - storedAmount;
     }
+
     public void dropItems(Location location) {
-        if (storedAmount == 0) return;
+        if (storedAmount == 0 || stored == null) return;
+
         ItemStack toDrop = stored.clone();
         for (int i = 0; i < storedAmount; i++) {
             location.getWorld().dropItem(location, toDrop);
@@ -147,15 +163,17 @@ public class Vault extends Device {
     }
 
     @Override
-    public void postCreate(boolean var1) {
+    public void postCreate(boolean isNew) {
         this.setDisplayStackString(BlockDisplays.VAULT.stack());
         this.handleDisplay();
+        this.stored = this.storedString != null ? TUItems.createStackFromString(storedString, true) : null;
     }
 
     public static void addDevice() {
-        MinetorioListener.deviceClasses.put(classSpacedName, Vault.class);
-        ItemMenu.addItem(new Vault(null).getDeviceStack(), ItemMenu.Category.LOGISTICS);
+        MinetorioListener.deviceClasses.put(CLASS_SPACED_NAME, Vault.class);
         ItemStack result = new Vault(null).getDeviceStack();
+        ItemMenu.addItem(result, ItemMenu.Category.LOGISTICS);
+
         RecipeData data = RecipeData.getRecipeData(result);
         if (data == null) {
             data = new RecipeData();
@@ -165,7 +183,7 @@ public class Vault extends Device {
             recipe.setIngredient('O', new RecipeChoice.ExactChoice(new ItemStack(Material.BARREL)));
             data.setRecipe(recipe);
             data.setCraftingDevice("Basic Assembler");
-            data.setRecipeID(ChatColor.stripColor(result.getItemMeta().getDisplayName().toString()));
+            data.setRecipeID(ChatColor.stripColor(result.getItemMeta().getDisplayName()));
         }
     }
 }

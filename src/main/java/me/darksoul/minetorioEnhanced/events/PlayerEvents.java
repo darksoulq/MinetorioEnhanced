@@ -2,6 +2,7 @@ package me.darksoul.minetorioEnhanced.events;
 
 import com.MT.xxxtrigger50xxx.Devices.Device;
 import com.github.darksoulq.abyssallib.event.SubscribeEvent;
+import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import io.papermc.paper.event.player.PlayerPickBlockEvent;
 import me.darksoul.minetorioEnhanced.device.Vault;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -9,6 +10,8 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -32,7 +35,7 @@ public class PlayerEvents {
                 if (!remaining.isEmpty()) {
                     event.getPlayer().getInventory().setItem(EquipmentSlot.HAND, device.getDeviceStack());
                 }
-             }
+            }
         }
     }
 

@@ -42,7 +42,7 @@ public class Vault extends Device {
         this.useSpecificInputs = true;
         this.addSpecificInput(new ItemStack(Material.AIR));
         this.setInputSlots(new ArrayList<>(List.of(0)));
-        this.setOutputSlots(new ArrayList<>(List.of(1, 2)));
+        this.setOutputSlots(new ArrayList<>(List.of(1)));
         this.standardMoverBehavior = true;
         this.displayLockedHorizontal = true;
     }
@@ -76,6 +76,7 @@ public class Vault extends Device {
     @Override
     public boolean onLeftClick(PlayerInteractEvent event) {
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE) return false;
+        ItemStack stack = inv.getItem(0);
 
         if (stored == null) {
             event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize(
@@ -83,7 +84,7 @@ public class Vault extends Device {
             ));
         } else {
             event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize(
-                    "<green>Contains <gold>" + storedAmount + "/" + MAX + "</gold> Items</green>"
+                    "<green>Contains <gold>" + (storedAmount + (stack != null ? stack.getAmount() : 0)) + "/" + MAX + "</gold> Items</green>"
             ));
         }
 
@@ -121,7 +122,6 @@ public class Vault extends Device {
 
         if ((output == null || output.getType().isAir()) && storedAmount > 0) {
             inv.setItem(1, stored.clone());
-            storedAmount--;
         }
     }
 
@@ -144,13 +144,14 @@ public class Vault extends Device {
     }
 
     public void add() {
-        if (stored != null && storedAmount < MAX) {
+        ItemStack stack = inv.getItem(0);
+        if (stored != null && ((storedAmount - (stored.getMaxStackSize())) + (stack != null ? stack.getAmount() : 0))  < MAX) {
             storedAmount++;
         }
     }
 
     public int freeSpace() {
-        return MAX - storedAmount;
+        return MAX - (storedAmount - stored.getMaxStackSize());
     }
 
     public void dropItems(Location location) {
